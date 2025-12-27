@@ -108,6 +108,11 @@ Pour simuler un scénario plus proche de la réalité, exécutez `scripts/suppli
 
 > 💡 **Question 6** : Examinez attentivement le fichier `docker-compose.yml` du répertoire `scripts`, ainsi que celui situé à la racine du projet. Qu’ont-ils en commun ? Par quel mécanisme ces conteneurs peuvent-ils communiquer entre eux ? Veuillez joindre du code YML afin d’illustrer votre réponse.
 
+### 6. Connectez une application front-end à l'API (optionnel)
+Utilisez notre [projet gabarit front-end](https://github.com/guteacher/log430-frontend-template) pour interagir avec l'API. Pour utiliser ce dépôt, vous devez suivre les étapes d'installation décrites dans son fichier README. 
+
+Cette activité n'est pas obligatoire, mais une certaine expérience en utilisent une API RESTful avec un front-end pourrait vous être utile plus tard dans le projet. Nous vous encourageons donc à l'essayer.
+
 ## Conseils de débogage
 Si vous rencontrez des difficultés dans la réalisation des activités et que vous souhaitez voir plus en détail ce qui se passe dans les bases de données, vous pouvez utiliser [MySQL Workbench](https://www.mysql.com/products/community/) et [redis-cli](https://redis.io/docs/latest/operate/oss_and_stack/install/install-stack/docker/#connect-with-redis-cli) pour vérifier si les enregistrements sont correctement ajoutés/supprimés. Cependant, l'installation de ces logiciels n'est pas obligatoire pour la réalisation des activités.
 
