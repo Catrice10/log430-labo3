@@ -20,28 +20,22 @@ Dans ce laboratoire, nous poursuivrons le développement de notre application de
 
 ### 1. Créez un nouveau dépôt à partir du gabarit et clonez le dépôt
 ```bash
-git clone https://github.com/[votredepot]/log430-a25-labo3
-cd log430-a25-labo3
+git clone https://github.com/[votredepot]/log430-labo3
+cd log430-labo3
 ```
 
-### 2. Créez un réseau Docker
-Éxecutez dans votre terminal:
-```bash
-docker network create labo03-network
-```
-
-### 3. Préparez l'environnement de développement
-Suivez les mêmes étapes que dans le laboratoire 02. Ensuite, créez et lancez le conteneur Docker.
+### 2. Préparez l'environnement de développement
+Suivez les mêmes étapes que dans les derniers laboratoires. Créez un réseau `labo03-network`.
 ```bash
 docker build
 docker compose up -d
 ```
 
-### 4. Installez Postman
+### 3. Installez Postman
 [Installez Postman](https://learning.postman.com/docs/getting-started/installation/installation-and-updates/) et [importez la collection](https://www.geeksforgeeks.org/websites-apps/how-to-import-export-collections-in-postman/) disponible dans `/docs/collections`. 
 
-### 5. Comprenez les principes REST
-À ce stade, notre application est une API qui respecte presque tous les principes REST définis par Roy Fielding dans sa thèse de doctorat (2000) :
+### 4. Comprenez les principes REST
+À ce stade, notre application est une API qui respecte presque tous les principes REST définis par Roy Fielding dans sa [thèse de doctorat (2000)](https://roy.gbiv.com/pubs/dissertation/fielding_dissertation.pdf) :
 
 - ✅ **Client–Serveur** : séparation claire entre client et serveur.
 - ✅ **Système en couches** : notre application comporte trois couches (front-end, back-end, base de données).
@@ -50,6 +44,8 @@ docker compose up -d
 - ✅ **Interface uniforme** : les endpoints sont bien nommés et utilisent les bonnes méthodes HTTP (POST /orders, GET /products/:id, etc.).
 
 Une API qui respecte l'ensemble de ces principes est appelée une API RESTful. Pour l'instant, nous travaillons uniquement avec une API REST.
+
+> 📝 **NOTE** : Roy Fielding a également travaillé sur la spécification du protocole HTTP (la [RFC 7231](https://www.rfc-editor.org/rfc/rfc7231#section-4.2.1)), qui nous utilisons pour échanger les messages dans l'internet. Nous ferons référence à ce document dans l'une des activités ultérieures.
 
 ## 🧪 Activités pratiques
 
