@@ -19,7 +19,7 @@ Dans ce laboratoire, nous poursuivrons le développement de notre application de
 
 > ⚠️ IMPORTANT : Avant de commencer le setup et les activités, veuillez lire la documentation architecturale dans le répertoire `/docs/arc42/docs.pdf`.
 
-### 1. Créez un nouveau dépôt à partir du gabarit et clonez le dépôt
+### 1. Clonez le dépôt
 ```bash
 git clone https://github.com/[votredepot]/log430-labo3
 cd log430-labo3
