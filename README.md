@@ -123,7 +123,7 @@ Maintenant que la base de données est prête, nous pouvons tester le code qui a
 
 Exécutez vos tests pour vous assurer que le flux de stock fonctionne correctement.
 
-> 💡 **Question 1** : Dans la [RFC 7231](https://www.rfc-editor.org/rfc/rfc7231#section-4.2.1), nous trouvons que certaines méthodes HTTP sont considérées comme sûres (__safe__) ou idempotentes, en fonction de leur capacité à modifier (ou non) l'état de l'application. Lisez les sections **4.2.1** et **4.2.2** de la RFC 7231 et répondez : parmi les méthodes mentionnées dans l'activité 1, lesquelles sont sûres, non sûres, idempotentes et/ou non idempotentes?
+> 💡 **Question 1** : Dans la [RFC 7231](https://www.rfc-editor.org/rfc/rfc7231#section-4.2.1), nous trouvons que certaines méthodes HTTP sont considérées comme sûres (__safe__) ou idempotentes, en fonction de leur capacité à modifier (ou non) l'état de l'application. Lisez les sections **4.2.1** et **4.2.2** de la RFC 7231 et répondez : parmi les méthodes mentionnées dans l'activité 2, lesquelles sont sûres, non sûres, idempotentes et/ou non idempotentes?
 
 ### 3. Créez un rapport de stock
 
