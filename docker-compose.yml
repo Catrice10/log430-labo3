@@ -8,7 +8,7 @@ services:
       MYSQL_USER: labo03
       MYSQL_PASSWORD: labo03
     volumes:
-      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+      - ./db-init:/docker-entrypoint-initdb.d
       - mysql_data:/var/lib/mysql
     networks:
       - labo03-network

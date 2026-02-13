@@ -18,12 +18,29 @@ jobs:
     
     - name: Vérifier les fichiers requis
       run: |
-        if [ ! -f "init.sql" ]; then
-          echo "ERREUR: Le fichier init.sql est manquant!"
-          ls -la
+        echo "Contenu du répertoire:"
+        ls -la
+        
+        if [ -d "db-init" ]; then
+          echo ""
+          echo "Contenu de db-init/:"
+          ls -la db-init/
+          
+          # Chercher le fichier SQL dans db-init
+          if [ -f "db-init/init.sql" ]; then
+            echo "✓ Fichier SQL trouvé dans db-init/init.sql"
+          elif [ -f "db-init/schema.sql" ]; then
+            echo "✓ Fichier SQL trouvé dans db-init/schema.sql"
+          else
+            echo "ERREUR: Aucun fichier SQL trouvé dans db-init/"
+            exit 1
+          fi
+        elif [ -f "init.sql" ]; then
+          echo "✓ init.sql trouvé à la racine"
+        else
+          echo "ERREUR: Aucun fichier d'initialisation SQL trouvé!"
           exit 1
         fi
-        echo "✓ init.sql trouvé"
         
         if [ ! -f "docker-compose.yml" ]; then
           echo "ERREUR: Le fichier docker-compose.yml est manquant!"
