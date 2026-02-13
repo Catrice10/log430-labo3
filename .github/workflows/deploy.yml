@@ -11,7 +11,7 @@ jobs:
     - name: Nettoyage avant checkout
       run: |
         sudo chown -R $USER:$USER . || true
-        docker system prune -f # Évite de saturer ton Mac avec des images inutiles
+        docker system prune -f 
 
     - name: Checkout code
       uses: actions/checkout@v4
@@ -38,11 +38,20 @@ jobs:
     
     - name: Build et démarrage des services
       run: docker compose up -d --build
-    
+
+    - name: Attendre que MySQL et les tables soient prêts
+      run: |
+        echo "Attente de l'initialisation de la base de données..."
+        # On attend que MySQL réponde ET que la table stocks soit visible
+        until docker exec mysql mysql -u root -proot -e "SELECT 1 FROM labo03_db.stocks LIMIT 1;" > /dev/null 2>&1; do
+          echo "MySQL ou la table stocks ne sont pas encore prêts... (sommeil 3s)"
+          sleep 3
+        done
+        echo "Base de données prête !"
+
     - name: Synchronisation initiale des stocks (Activité 5)
       run: |
         APP_ID=$(docker ps -q -f name=store_manager)
-        # CORRECTION : Utilisation de stocks.commands.write_stock pour l'import
         docker exec -t $APP_ID python -c "from db import get_redis_conn; from stocks.commands.write_stock import _populate_redis_from_mysql; r = get_redis_conn(); _populate_redis_from_mysql(r)"
     
     - name: Exécuter les tests unitaires
@@ -53,5 +62,5 @@ jobs:
     - name: Nettoyage post-déploiement
       if: always()
       run: |
-        docker image prune -f # Nettoie les restes de la build pour préserver les ressources
+        docker image prune -f 
         sudo chown -R $USER:$USER .
