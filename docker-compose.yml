@@ -6,7 +6,7 @@ services:
     volumes:
       - .:/app
     ports:
-      - "5000:5000"
+      - "5001:5000"
     networks:
       - labo03-network
     depends_on:
@@ -50,6 +50,10 @@ services:
       timeout: 10s
       retries: 5
       start_period: 10s
+  supplier_app:
+    build:
+    networks:
+      - labo03-network
 
 networks:
   labo03-network:

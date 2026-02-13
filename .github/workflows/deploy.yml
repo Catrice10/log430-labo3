@@ -1,0 +1,56 @@
+name: Deploy Store Manager Labo 03
+
+on:
+  push:
+    branches: [ main, master ]
+
+jobs:
+  deploy:
+    runs-on: self-hosted
+    steps:
+    - name: Nettoyage avant checkout
+      run: |
+        sudo chown -R $USER:$USER . || true
+        docker system prune -f # Libère l'espace disque des builds précédentes
+
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Créer fichier .env
+      run: |
+        cat > .env << 'ENVEOF'
+        DB_HOST=mysql
+        DB_PORT=3306
+        DB_NAME=labo03_db
+        DB_USER=labo03
+        DB_PASSWORD=labo03
+        REDIS_HOST=redis
+        REDIS_PORT=6379
+        REDIS_DB=0
+        FLASK_ENV=development
+        ENVEOF
+        
+    - name: Créer le réseau Docker
+      run: docker network create labo03-network || true
+    
+    - name: Arrêter les services existants
+      run: docker compose down -v || true
+    
+    - name: Build et démarrage des services
+      run: docker compose up -d --build
+    
+    - name: Synchronisation initiale des stocks (Activité 5)
+      run: |
+        APP_ID=$(docker ps -q -f name=store_manager)
+        docker exec -t $APP_ID python -c "from db import get_redis_conn; from stocks.queries.read_stock import _populate_redis_from_mysql; r = get_redis_conn(); _populate_redis_from_mysql(r)"
+    
+    - name: Exécuter les tests unitaires
+      run: |
+        APP_ID=$(docker ps -q -f name=store_manager)
+        docker exec -t $APP_ID pytest
+
+    - name: Nettoyage post-déploiement
+      if: always()
+      run: |
+        docker image prune -f # Supprime les images "dangling" pour économiser la mémoire
+        sudo chown -R $USER:$USER .

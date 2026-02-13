@@ -5,6 +5,7 @@ Auteurs : Gabriel C. Ullmann, Fabio Petrillo, 2025
 """
 from sqlalchemy import text
 from stocks.models.stock import Stock
+from stocks.models.product import Product
 from db import get_redis_conn, get_sqlalchemy_session
 
 def set_stock_for_product(product_id, quantity):
@@ -70,29 +71,24 @@ def update_stock_redis(order_items, operation):
     if not order_items:
         return
     r = get_redis_conn()
+    session = get_sqlalchemy_session()
     stock_keys = list(r.scan_iter("stock:*"))
     if stock_keys:
         pipeline = r.pipeline()
         for item in order_items:
-            if hasattr(item, 'product_id'):
-                product_id = item.product_id
-                quantity = item.quantity
-            else:
-                product_id = item['product_id']
-                quantity = item['quantity']
-            # TODO: ajoutez plus d'information sur l'article
+            product_id = item.product_id if hasattr(item, 'product_id') else item['product_id']
+            quantity = item.quantity if hasattr(item, 'product_id') else item['quantity']
+            product = session.query(Product).filter_by(id=product_id).first()
             current_stock = r.hget(f"stock:{product_id}", "quantity")
             current_stock = int(current_stock) if current_stock else 0
-            
-            if operation == '+':
-                new_quantity = current_stock + quantity
-            else:  
-                new_quantity = current_stock - quantity
-            
-            pipeline.hset(f"stock:{product_id}", "quantity", new_quantity)
-        
+            new_quantity = current_stock + quantity if operation == '+' else current_stock - quantity
+            pipeline.hset(f"stock:{product_id}", mapping={
+                "quantity": new_quantity,
+                "name": product.name if product else "Unknown",
+                "sku": product.sku if product else "",
+                "price": float(product.price) if product else 0.0
+            })        
         pipeline.execute()
-    
     else:
         _populate_redis_from_mysql(r)
 
