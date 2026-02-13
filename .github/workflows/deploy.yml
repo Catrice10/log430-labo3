@@ -16,20 +16,6 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v4
     
-    - name: Créer fichier .env
-      run: |
-        cat > .env << 'ENVEOF'
-        DB_HOST=mysql
-        DB_PORT=3306
-        DB_NAME=labo03_db
-        DB_USER=labo03
-        DB_PASSWORD=labo03
-        REDIS_HOST=redis
-        REDIS_PORT=6379
-        REDIS_DB=0
-        FLASK_ENV=development
-        ENVEOF
-        
     - name: Créer le réseau Docker
       run: docker network create labo03-network || true
     
@@ -39,25 +25,77 @@ jobs:
     - name: Build et démarrage des services
       run: docker compose up -d --build
 
-    - name: Attendre que MySQL et les tables soient prêts
+    - name: Attendre que les services soient prêts
       run: |
-        echo "Attente de l'initialisation de la base de données..."
-        # On attend que MySQL réponde ET que la table stocks soit visible
-        until docker exec mysql mysql -u root -proot -e "SELECT 1 FROM labo03_db.stocks LIMIT 1;" > /dev/null 2>&1; do
-          echo "MySQL ou la table stocks ne sont pas encore prêts... (sommeil 3s)"
-          sleep 3
+        echo "Attente des services (healthchecks)..."
+        
+        # Attendre que MySQL soit healthy
+        MAX_WAIT=180
+        ELAPSED=0
+        echo "Attente de MySQL..."
+        until [ "$(docker inspect --format='{{.State.Health.Status}}' mysql 2>/dev/null)" = "healthy" ]; do
+          if [ $ELAPSED -ge $MAX_WAIT ]; then
+            echo "ERREUR: MySQL n'est pas devenu healthy après ${MAX_WAIT}s"
+            echo "--- Logs MySQL ---"
+            docker logs mysql --tail 50
+            exit 1
+          fi
+          echo "MySQL status: $(docker inspect --format='{{.State.Health.Status}}' mysql 2>/dev/null || echo 'starting...')"
+          sleep 5
+          ELAPSED=$((ELAPSED + 5))
         done
-        echo "Base de données prête !"
+        echo "✓ MySQL est prêt!"
+        
+        # Attendre que Redis soit healthy
+        echo "Attente de Redis..."
+        ELAPSED=0
+        until [ "$(docker inspect --format='{{.State.Health.Status}}' redis 2>/dev/null)" = "healthy" ]; do
+          if [ $ELAPSED -ge 60 ]; then
+            echo "ERREUR: Redis n'est pas devenu healthy après 60s"
+            docker logs redis --tail 50
+            exit 1
+          fi
+          echo "Redis status: $(docker inspect --format='{{.State.Health.Status}}' redis 2>/dev/null || echo 'starting...')"
+          sleep 3
+          ELAPSED=$((ELAPSED + 3))
+        done
+        echo "✓ Redis est prêt!"
+        
+        # Vérifier que la table stocks existe
+        echo "Vérification de la table stocks..."
+        if docker exec mysql mysql -u labo03 -plabo03 labo03_db -e "DESCRIBE stocks;" > /dev/null 2>&1; then
+          echo "✓ Table stocks trouvée!"
+          docker exec mysql mysql -u labo03 -plabo03 labo03_db -e "SELECT COUNT(*) as stock_count FROM stocks;"
+        else
+          echo "ERREUR: Table stocks non trouvée"
+          echo "--- Tables disponibles ---"
+          docker exec mysql mysql -u labo03 -plabo03 labo03_db -e "SHOW TABLES;"
+          exit 1
+        fi
 
     - name: Synchronisation initiale des stocks (Activité 5)
       run: |
-        APP_ID=$(docker ps -q -f name=store_manager)
-        docker exec -t $APP_ID python -c "from db import get_redis_conn; from stocks.commands.write_stock import _populate_redis_from_mysql; r = get_redis_conn(); _populate_redis_from_mysql(r)"
+        echo "Synchronisation Redis depuis MySQL..."
+        docker exec store_manager python -c "from db import get_redis_conn; from stocks.commands.write_stock import _populate_redis_from_mysql; r = get_redis_conn(); _populate_redis_from_mysql(r)"
+        echo "✓ Stocks synchronisés!"
     
     - name: Exécuter les tests unitaires
       run: |
-        APP_ID=$(docker ps -q -f name=store_manager)
-        docker exec -t $APP_ID pytest
+        echo "Exécution des tests..."
+        docker exec store_manager pytest -v
+        echo "✓ Tests terminés!"
+
+    - name: Afficher le statut des services
+      if: success()
+      run: |
+        echo "=== Déploiement réussi! ==="
+        echo ""
+        echo "Services actifs:"
+        docker ps --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}"
+        echo ""
+        echo "Santé des services:"
+        echo "MySQL: $(docker inspect --format='{{.State.Health.Status}}' mysql)"
+        echo "Redis: $(docker inspect --format='{{.State.Health.Status}}' redis)"
 
     - name: Nettoyage post-déploiement
       if: always()
