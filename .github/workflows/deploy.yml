@@ -11,7 +11,7 @@ jobs:
     - name: Nettoyage avant checkout
       run: |
         sudo chown -R $USER:$USER . || true
-        docker system prune -f # Libère l'espace disque des builds précédentes
+        docker system prune -f # Évite de saturer ton Mac avec des images inutiles
 
     - name: Checkout code
       uses: actions/checkout@v4
@@ -42,7 +42,8 @@ jobs:
     - name: Synchronisation initiale des stocks (Activité 5)
       run: |
         APP_ID=$(docker ps -q -f name=store_manager)
-        docker exec -t $APP_ID python -c "from db import get_redis_conn; from stocks.queries.write_stock import _populate_redis_from_mysql; r = get_redis_conn(); _populate_redis_from_mysql(r)"
+        # CORRECTION : Utilisation de stocks.commands.write_stock pour l'import
+        docker exec -t $APP_ID python -c "from db import get_redis_conn; from stocks.commands.write_stock import _populate_redis_from_mysql; r = get_redis_conn(); _populate_redis_from_mysql(r)"
     
     - name: Exécuter les tests unitaires
       run: |
@@ -52,5 +53,5 @@ jobs:
     - name: Nettoyage post-déploiement
       if: always()
       run: |
-        docker image prune -f # Supprime les images "dangling" pour économiser la mémoire
+        docker image prune -f # Nettoie les restes de la build pour préserver les ressources
         sudo chown -R $USER:$USER .
