@@ -16,14 +16,65 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v4
     
-    - name: Créer le réseau Docker
-      run: docker network create labo03-network || true
+    - name: Vérifier les fichiers requis
+      run: |
+        if [ ! -f "init.sql" ]; then
+          echo "ERREUR: Le fichier init.sql est manquant!"
+          ls -la
+          exit 1
+        fi
+        echo "✓ init.sql trouvé"
+        
+        if [ ! -f "docker-compose.yml" ]; then
+          echo "ERREUR: Le fichier docker-compose.yml est manquant!"
+          exit 1
+        fi
+        echo "✓ docker-compose.yml trouvé"
     
     - name: Arrêter les services existants
-      run: docker compose down -v || true
+      run: |
+        docker compose down -v || true
+        # S'assurer que le volume MySQL est complètement supprimé
+        docker volume rm log430-labo3_mysql_data 2>/dev/null || true
+        docker volume prune -f
+        # Nettoyer aussi le réseau s'il existe
+        docker network rm labo03-network 2>/dev/null || true
     
     - name: Build et démarrage des services
-      run: docker compose up -d --build
+      run: |
+        echo "Démarrage de docker compose..."
+        docker compose up -d --build
+        
+        echo "Attente de 10 secondes pour le démarrage initial..."
+        sleep 10
+        
+        echo "=== État des containers ==="
+        docker ps -a
+        
+        echo ""
+        echo "=== Vérification MySQL ==="
+        if docker ps | grep -q mysql; then
+          echo "✓ MySQL est en cours d'exécution"
+        else
+          echo "✗ MySQL n'est pas en cours d'exécution!"
+          echo ""
+          echo "--- Logs complets MySQL ---"
+          docker logs mysql 2>&1 || echo "Impossible de récupérer les logs"
+          echo ""
+          echo "--- Inspection du container ---"
+          docker inspect mysql 2>&1 | grep -A 10 "State" || echo "Inspection impossible"
+          exit 1
+        fi
+        
+        echo ""
+        echo "=== Vérification Redis ==="
+        if docker ps | grep -q redis; then
+          echo "✓ Redis est en cours d'exécution"
+        else
+          echo "✗ Redis n'est pas en cours d'exécution!"
+          docker logs redis 2>&1 || echo "Impossible de récupérer les logs"
+          exit 1
+        fi
 
     - name: Attendre que les services soient prêts
       run: |
