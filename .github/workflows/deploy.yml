@@ -42,7 +42,7 @@ jobs:
     - name: Synchronisation initiale des stocks (Activité 5)
       run: |
         APP_ID=$(docker ps -q -f name=store_manager)
-        docker exec -t $APP_ID python -c "from db import get_redis_conn; from stocks.queries.read_stock import _populate_redis_from_mysql; r = get_redis_conn(); _populate_redis_from_mysql(r)"
+        docker exec -t $APP_ID python -c "from db import get_redis_conn; from stocks.queries.write_stock import _populate_redis_from_mysql; r = get_redis_conn(); _populate_redis_from_mysql(r)"
     
     - name: Exécuter les tests unitaires
       run: |
